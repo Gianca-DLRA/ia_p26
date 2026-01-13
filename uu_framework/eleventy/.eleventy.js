@@ -72,8 +72,12 @@ module.exports = function(eleventyConfig) {
   // Copy images from content (explicitly from images directory only)
   eleventyConfig.addPassthroughCopy("images/**/*.{png,jpg,jpeg,gif,svg,webp}");
 
-  // Copy PDF files from specific directories (exclude b_libros which is gitignored)
-  eleventyConfig.addPassthroughCopy("0*/**/*.pdf");
+  // Copy PDF files from content directories (exclude b_libros which is gitignored)
+  // Match all PDFs in numbered directories (01_, 02_, 03_, etc.)
+  ['01', '02', '03', '04', '05', '06', '07', '08', '09'].forEach(num => {
+    eleventyConfig.addPassthroughCopy(`${num}_*/**/*.pdf`);
+  });
+  // Match all PDFs in appendix directories
   eleventyConfig.addPassthroughCopy("a_stack/**/*.pdf");
 
   // Copy favicon files to site root
