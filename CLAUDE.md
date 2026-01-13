@@ -14,16 +14,20 @@ ia_p26/
 │   ├── 00_index.md           # Main index
 │   ├── 01_*/                 # Numbered chapters
 │   ├── a_stack/              # Appendix A: Technical stack
-│   ├── b_libros/             # Appendix B: Books (not rendered)
+│   ├── b_libros/             # Appendix B: Books (gitignored, not rendered)
 │   ├── 07_certificaciones/   # Certification guides
 │   └── flow.sh               # Git workflow script
 ├── estudiantes/              # Student work (not rendered)
 ├── uu_framework/             # Static site framework
-│   ├── config/               # Site & theme configuration
-│   ├── scripts/              # Python preprocessing
-│   ├── eleventy/             # Eleventy SSG config & templates
+│   ├── config/               # Site & theme configuration (YAML)
+│   ├── scripts/              # Python preprocessing (orchestrator + extractors)
+│   ├── eleventy/             # Eleventy SSG (config, templates, styles)
+│   │   ├── .eleventy.js      # Main Eleventy configuration
+│   │   ├── _includes/        # Nunjucks templates & layouts
+│   │   ├── _data/            # Generated JSON files (metadata, hierarchy, tasks)
+│   │   └── src/              # Source CSS (Tailwind + themes)
 │   ├── docker/               # Docker build environment
-│   └── docs/                 # Framework documentation
+│   └── docs/                 # Framework documentation (dev/profesor/estudiante)
 ├── _site/                    # Built output (gitignored)
 └── CLAUDE.md                 # This file
 ```
@@ -32,20 +36,39 @@ ia_p26/
 
 ### Build Pipeline
 
-```
-1. Python Preprocessing (scripts/)
-   ├── extract_metadata.py   → metadata.json
-   ├── generate_indices.py   → hierarchy.json
-   └── aggregate_tasks.py    → tasks.json
+The build process runs in three sequential phases:
 
-2. Eleventy Build (eleventy/)
-   ├── Parse markdown with markdown-it
-   ├── Apply Nunjucks templates
-   └── Generate HTML pages
-
-3. Tailwind CSS Processing
-   └── Generate themed CSS
 ```
+Phase 1: Python Preprocessing (scripts/preprocess.py)
+   ├── generate_landing_page()     → clase/README.md (from root README.md)
+   ├── extract_metadata.py          → _data/metadata.json (frontmatter + file info)
+   ├── generate_indices.py          → _data/hierarchy.json (nav tree structure)
+   ├── aggregate_tasks.py           → _data/tasks.json (homework/exams/projects)
+   └── process_calendar_topics.py   → _data/calendar_topics.json
+
+Phase 2: Eleventy Build (.eleventy.js)
+   ├── Loads JSON data from _data/
+   ├── Parses markdown (markdown-it + plugins)
+   │   ├── markdown-it-container  → :::homework, :::exercise, etc.
+   │   ├── markdown-it-attrs      → {.class #id} syntax
+   │   └── markdown-it-anchor     → heading anchors
+   ├── Renders with Nunjucks templates (_includes/)
+   ├── Copies static assets (images, PDFs, fonts)
+   └── Outputs to _site/
+
+Phase 3: Tailwind CSS (tailwind.config.js)
+   ├── Processes src/css/main.css
+   ├── Copies theme files (src/css/themes/*.css)
+   └── Outputs to _site/css/
+```
+
+### Key Architecture Concepts
+
+**Data Flow**: Python scripts extract data from markdown frontmatter and content, generating JSON files that Eleventy templates consume via the `_data/` directory. This separation allows content changes to trigger minimal rebuilds.
+
+**Content Exclusions**: Files matching patterns in `uu_framework/config/site.yaml` (like `b_libros/`, `flow.sh`, `??_*` directories) are excluded from rendering but may still be present in the repository.
+
+**Path Prefix**: All URLs are prefixed with `/ia_p26/` (configured in `.eleventy.js` and `site.yaml`) for GitHub Pages deployment at `sonder.art/ia_p26/`.
 
 ### File Naming Convention
 
@@ -102,53 +125,97 @@ graph TD
 
 ### Docker Build Commands
 
+All Docker commands must be run from the repository root:
+
 ```bash
-# Start dev server with hot reload
+# Start dev server with hot reload (most common)
 docker compose -f uu_framework/docker/docker-compose.yaml up dev
+# → Runs preprocessing, builds site, starts BrowserSync at http://localhost:3000/ia_p26/
+# → Watches for file changes and auto-rebuilds
 
-# Production build
+# Production build (for deployment)
 docker compose -f uu_framework/docker/docker-compose.yaml run build
+# → Runs full build pipeline: preprocess → eleventy → tailwind → asset copy
 
-# Run preprocessing only (debug)
+# Debug preprocessing only
 docker compose -f uu_framework/docker/docker-compose.yaml run preprocess
+# → Runs only Python scripts, outputs JSON to _data/ with --verbose flag
 ```
 
-Dev server runs at: `http://localhost:3000/ia_p26/`
+**Important**: Dev server runs at `http://localhost:3000/ia_p26/` (note the path prefix).
 
 ### Git Workflow Script (flow.sh)
 
+Student-focused wrapper for common Git operations:
+
 ```bash
-./clase/flow.sh setup    # Initial setup
-./clase/flow.sh sync     # Sync with upstream
-./clase/flow.sh start <task-name>  # Start new task
-./clase/flow.sh save "message"     # Commit changes
-./clase/flow.sh upload   # Push branch
-./clase/flow.sh finish   # Clean up after merge
+./clase/flow.sh setup              # Configure upstream remote + create user folder
+./clase/flow.sh sync               # Pull from upstream/main → push to origin/main
+./clase/flow.sh start <task-name>  # Sync + create new branch from main
+./clase/flow.sh save "message"     # Stage all + commit with message
+./clase/flow.sh upload             # Push current branch to origin
+./clase/flow.sh finish             # Return to main, sync, optionally delete branch
+./clase/flow.sh copy <src> <dest>  # Copy files with safety checks
 ```
 
-Upstream: `git@github.com:sonder-art/ia_p26.git`
+**Upstream repository**: `git@github.com:sonder-art/ia_p26.git`
+**Student workflow**: Work in `estudiantes/<username>/`, commit to feature branches, push to personal forks, create PRs to upstream.
 
 ## Development Guidelines
 
 ### When Modifying the Framework
 
-1. **Eleventy config** (`.eleventy.js`): Filters, collections, transforms
-2. **Templates** (`_includes/`): Nunjucks layouts and components
-3. **Theming** (`src/css/`): CSS variables for colors, fonts
-4. **Preprocessing** (`scripts/`): Python data extraction
+Key files to understand when making framework changes:
+
+1. **Eleventy config** (`uu_framework/eleventy/.eleventy.js`):
+   - Custom markdown-it containers (:::homework, :::exercise, etc.)
+   - Filters: `formatDate`, `renderMarkdown`, `getNavNumber`, `cleanNavTitle`
+   - Collections: content filtering logic, exclusions
+   - Transforms: `.md` link rewriting
+   - Passthrough copy rules for PDFs, images, fonts
+
+2. **Templates** (`uu_framework/eleventy/_includes/`):
+   - `layouts/base.njk`: Main page wrapper
+   - Navigation components consume `hierarchy.json`
+   - Task pages consume `tasks.json`
+
+3. **Preprocessing** (`uu_framework/scripts/`):
+   - `preprocess.py`: Orchestrator that runs all extractors
+   - Modify extractors to change what data is available to templates
+   - JSON outputs land in `_data/` for Eleventy consumption
+
+4. **Configuration** (`uu_framework/config/site.yaml`):
+   - Exclusion patterns, theme settings, feature flags
+   - Changes here require preprocessing rerun
 
 ### When Creating Content
 
-1. Follow file naming convention for proper ordering
-2. Use YAML frontmatter for metadata:
+1. **Follow file naming convention** for proper ordering (see table above)
+   - `00_index.md` for directory landing pages
+   - Numeric prefixes (`01_`, `02_`) for chapters
+   - Letter prefixes (`a_`, `b_`) for appendices
+   - `??_` prefix for work-in-progress (excluded from build)
+
+2. **Use YAML frontmatter** for metadata:
    ```yaml
    ---
    title: "Page Title"
    summary: "Brief description"
+   order: 10  # Optional override for sorting
    ---
    ```
-3. Use component syntax for assignments (:::homework, etc.)
-4. Links to other `.md` files are auto-converted
+
+3. **Use component syntax** for assignments:
+   - `:::homework{id="hw-01" title="..." due="2026-02-01" points="10"}`
+   - `:::exercise{title="..."}`
+   - `:::prompt{title="..."}` (includes copy button)
+   - `:::example{title="..."}`
+   - `:::exam{id="..." title="..." date="..."}`
+   - `:::project{id="..." title="..." due="..."}`
+
+4. **Markdown links**: Write as `[text](../path/file.md)` - Eleventy transforms to `[text](../path/file/)` automatically
+
+5. **Images**: Place in nearest `images/` directory, reference as `![alt](images/file.png)` - Eleventy handles path resolution
 
 ### Language Guidelines
 
@@ -158,22 +225,55 @@ Upstream: `git@github.com:sonder-art/ia_p26.git`
 
 ## Documentation Structure
 
+Documentation is organized by audience and rendered separately:
+
 ```
 uu_framework/docs/
 ├── dev/           # Developer guides (English)
-│   ├── architecture, preprocessing, eleventy
-│   ├── theming, components, docker
+│   ├── Architecture, preprocessing, Eleventy internals
+│   ├── Theming system, component development
+│   └── Docker setup and troubleshooting
 ├── profesor/      # Professor guides (Spanish)
-│   ├── estructura, frontmatter, componentes
-│   ├── mermaid, mejores_practicas
+│   ├── Content structure, frontmatter reference
+│   ├── Component usage (:::homework, :::exam, etc.)
+│   └── Mermaid diagrams, best practices
 └── estudiante/    # Student guides (Spanish)
-    ├── navegacion, accesibilidad, tareas
+    ├── Site navigation, accessibility features
+    └── Submitting assignments, task tracking
 ```
 
-## Student Workflow
+These are processed separately from course content and rendered to `/docs/` URLs.
+
+## Common Workflows
+
+### Adding New Course Content
+
+1. Create or modify markdown files in `clase/`
+2. Follow naming conventions (`01_chapter/`, `00_index.md`)
+3. Run dev server: `docker compose -f uu_framework/docker/docker-compose.yaml up dev`
+4. Preview at `http://localhost:3000/ia_p26/`
+5. Preprocessing runs automatically, generates fresh JSON data
+
+### Debugging Build Issues
+
+```bash
+# Check preprocessing output (verbose mode)
+docker compose -f uu_framework/docker/docker-compose.yaml run preprocess
+
+# Check generated JSON files
+cat uu_framework/eleventy/_data/metadata.json
+cat uu_framework/eleventy/_data/hierarchy.json
+cat uu_framework/eleventy/_data/tasks.json
+
+# Verify exclusion patterns
+cat uu_framework/config/site.yaml
+```
+
+### Student Assignment Workflow
 
 Students work in `estudiantes/<username>/`:
-1. `./clase/flow.sh start tarea-X` - Create branch
-2. Work in your directory
-3. `./clase/flow.sh save "message"` - Commit
-4. `./clase/flow.sh upload` - Push and create PR
+1. `./clase/flow.sh start tarea-X` - Create feature branch
+2. Work in personal directory, commit changes
+3. `./clase/flow.sh save "message"` - Commit work
+4. `./clase/flow.sh upload` - Push to fork and create PR to upstream
+5. After PR merge: `./clase/flow.sh finish` - Clean up and sync
