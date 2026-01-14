@@ -42,8 +42,6 @@ graph LR
 
 ![Ejemplos de Agentes en el Mundo Real](./images/ejemplos_agentes.png)
 
-> 🎬 **En el Anime**: Los **Tachikomas** de *Ghost in the Shell: Stand Alone Complex* son ejemplos perfectos de agentes robóticos: sensores ópticos, comunicación en red, y actuadores para movimiento y combate. Lo fascinante es que desarrollan personalidades distintas a pesar de sincronizar memorias — ¿qué los hace "individuos"?
-
 ---
 
 ## Clasificación de Agentes: Russell & Norvig (AIMA)
@@ -140,8 +138,6 @@ En Vacuum World, si el agente está en A (limpio) y va a Right, luego en B (limp
 
 **Solución**: Necesita memoria (→ Model-Based)
 :::
-
-> 🎬 **En el Anime**: **Saitama** de *One Punch Man* opera como un Simple Reflex Agent llevado al extremo: `if (enemigo) then punch()`. No necesita estrategia, memoria, ni planificación porque su "actuador" (el puño) resuelve todo. Irónicamente, su problema es que es *demasiado* efectivo — busca un ambiente que requiera más que reflejos simples.
 
 ---
 

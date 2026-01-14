@@ -85,6 +85,19 @@ jobs:
             echo "Copied: $rel_path"
           done
 
+      - name: Copy images from content subdirectories
+        run: |
+          # Copy all images directories from content (convention: */images/)
+          find clase -type d -name "images" | grep -v "b_libros" | while read img_dir; do
+            # Get relative path from clase/
+            rel_path="${img_dir#clase/}"
+            # Create directory in _site
+            mkdir -p "_site/$rel_path"
+            # Copy all files in the images directory
+            cp -r "$img_dir"/* "_site/$rel_path/" 2>/dev/null || true
+            echo "Copied images from: $rel_path"
+          done
+
       - name: Create .nojekyll file
         run: |
           touch _site/.nojekyll
