@@ -58,7 +58,7 @@ Cada tema del curso responde a preguntas sobre este ciclo:
 
 ## Visualización: Landscape del Curso
 
-![Landscape del Curso](./images/landscape_del_curso.png)
+![Landscape del Curso]({{ '/02_agentes_&_ambientes/images/landscape_del_curso.png' | url }})
 
 ---
 

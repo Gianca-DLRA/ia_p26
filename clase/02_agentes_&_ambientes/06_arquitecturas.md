@@ -45,7 +45,7 @@ else if location = B then return Left
 - ❌ No tiene **memoria**
 - ❌ No puede **planear**
 
-![Simple Reflex Agent - Termostato y Vacuum](./images/simple_reflex_ejemplos.png)
+![Simple Reflex Agent - Termostato y Vacuum]({{ '/02_agentes_&_ambientes/images/simple_reflex_ejemplos.png' | url }})
 
 ---
 
@@ -176,7 +176,7 @@ graph TD
 | **Learning Element** | Modifica performance element para mejorar |
 | **Problem Generator** | Sugiere acciones exploratorias |
 
-![Agente de Aprendizaje - Los 4 Componentes](./images/learning_agent_components.png)
+![Agente de Aprendizaje - Los 4 Componentes]({{ '/02_agentes_&_ambientes/images/learning_agent_components.png' | url }})
 
 ### El trade-off fundamental
 
@@ -196,7 +196,7 @@ graph TD
 | Utility-Based | ✅ | ✅ | ✅ | ❌ |
 | Learning | ✅ | ✅ | ✅ | ✅ |
 
-![Resumen Comparativo de Arquitecturas](./images/resumen_comparativo.png)
+![Resumen Comparativo de Arquitecturas]({{ '/02_agentes_&_ambientes/images/resumen_comparativo.png' | url }})
 
 ---
 

@@ -138,7 +138,7 @@ Aplica a **cuatro aspectos**:
 | Taxi autónomo | Continuous | Continuous | Continuous |
 | Atari games | Discrete (pixels) | Discrete (frames) | Discrete (botones) |
 
-![Discreto vs Continuo - Visualización de Espacios](./images/discreto_vs_continuo.png)
+![Discreto vs Continuo - Visualización de Espacios]({{ '/02_agentes_&_ambientes/images/discreto_vs_continuo.png' | url }})
 
 ---
 
@@ -183,7 +183,7 @@ El **taxi autónomo** representa casi el "peor caso":
 | Discrete | **Continuous** | Posición, velocidad, ángulo son continuos |
 | Known | **Mostly** | Conocemos física y leyes (pero no todo) |
 
-![Propiedades del Ambiente](./images/propiedades_del_ambiente.png)
+![Propiedades del Ambiente]({{ '/02_agentes_&_ambientes/images/propiedades_del_ambiente.png' | url }})
 
 ---
 

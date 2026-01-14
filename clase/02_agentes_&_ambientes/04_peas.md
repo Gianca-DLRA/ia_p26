@@ -36,7 +36,7 @@ Cada componente responde a una pregunta fundamental:
 | **Actuators** | ¿Qué puede hacer? | Espacio $\mathcal{A}$ |
 | **Sensors** | ¿Qué puede percibir? | $O: \mathcal{S} \to \mathcal{P}$ |
 
-![Framework PEAS - Los 4 Componentes](./images/framework_peas.png)
+![Framework PEAS - Los 4 Componentes]({{ '/02_agentes_&_ambientes/images/framework_peas.png' | url }})
 
 ---
 
@@ -373,13 +373,13 @@ Donde: primer término = ángulo de volante $\delta$, segundo = aceleración en 
 - Oclusiones bloquean la vista
 - El futuro es incierto
 
-![Taxi Autónomo - Sistema PEAS Completo](./images/taxi_autonomo_peas.png)
+![Taxi Autónomo - Sistema PEAS Completo]({{ '/02_agentes_&_ambientes/images/taxi_autonomo_peas.png' | url }})
 
 ---
 
 ## Visualización: Comparando Agentes PEAS
 
-![Comparando Agentes con PEAS](./images/comparando_agentes.png)
+![Comparando Agentes con PEAS]({{ '/02_agentes_&_ambientes/images/comparando_agentes.png' | url }})
 
 ---
 

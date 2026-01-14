@@ -40,7 +40,7 @@ graph LR
 | **Software** | Archivos, network, input | Display, network, files |
 | **Termostato** | Termómetro | Switch on/off |
 
-![Ejemplos de Agentes en el Mundo Real](./images/ejemplos_agentes.png)
+![Ejemplos de Agentes en el Mundo Real]({{ '/02_agentes_&_ambientes/images/ejemplos_agentes.png' | url }})
 
 ---
 
@@ -114,7 +114,7 @@ function SIMPLE-REFLEX-AGENT(percept):
 
 **Ejemplo: Vacuum World Simple**
 
-![Vacuum World - El Mundo de la Aspiradora](./images/vacuum_world.png)
+![Vacuum World - El Mundo de la Aspiradora]({{ '/02_agentes_&_ambientes/images/vacuum_world.png' | url }})
 
 | Percept | Acción |
 |---------|--------|
@@ -753,7 +753,7 @@ El número $10^{600,000,000,000}$ en el texto es una estimación conservadora (a
 
 ## Visualización: Espectro de Agentes
 
-![Espectro de Agentes](./images/espectro_de_agentes.png)
+![Espectro de Agentes]({{ '/02_agentes_&_ambientes/images/espectro_de_agentes.png' | url }})
 
 ---
 

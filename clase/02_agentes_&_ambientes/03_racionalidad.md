@@ -32,7 +32,7 @@ graph TD
 | **Pensar** | Thinking Humanly | Thinking Rationally |
 | **Actuar** | Acting Humanly | Acting Rationally |
 
-![Los Cuatro Enfoques de la IA](./images/cuatro_enfoques_ia.png)
+![Los Cuatro Enfoques de la IA]({{ '/02_agentes_&_ambientes/images/cuatro_enfoques_ia.png' | url }})
 
 ---
 
@@ -86,7 +86,7 @@ graph TD
 - Los humanos son fáciles de engañar (ELIZA, chatbots simples)
 - No todos los comportamientos inteligentes son humanos (¿un avión "vuela mal" porque no aletea?)
 
-![El Test de Turing](./images/test_de_turing.png)
+![El Test de Turing]({{ '/02_agentes_&_ambientes/images/test_de_turing.png' | url }})
 
 ---
 
@@ -261,7 +261,7 @@ En el juego CoastRunners, el agente debía completar una carrera de botes.
 
 :::
 
-![Specification Gaming - Cuando el agente hackea el objetivo](./images/specification_gaming.png)
+![Specification Gaming - Cuando el agente hackea el objetivo]({{ '/02_agentes_&_ambientes/images/specification_gaming.png' | url }})
 
 ---
 
@@ -324,7 +324,7 @@ Estás caminando por los Campos Elíseos en París. Ves a un viejo amigo al otro
 
 **Patrón**: La racionalidad se mide por el **proceso**, no por el **resultado**.
 
-![Racionalidad vs Perfección - Proceso vs Resultado](./images/racionalidad_vs_perfeccion.png)
+![Racionalidad vs Perfección - Proceso vs Resultado]({{ '/02_agentes_&_ambientes/images/racionalidad_vs_perfeccion.png' | url }})
 
 ---
 
