@@ -374,7 +374,7 @@ NP-Completo = NP ∩ NP-Hard
 
 Esto significa:
 1. SAT está en NP (dada una asignación, podemos verificar en tiempo polinomial si satisface la fórmula)
-2. Cualquier problema en NP se puede reducir a SAT (SAT es al menos tan difícil como cualquier otro problema en NP)
+2. Cualquier problema en NP se puede reducir a SAT en tiempo polinomial (SAT es al menos tan difícil como cualquier otro problema en NP)
 
 ### ¿Por Qué Importa?
 
@@ -411,19 +411,82 @@ A pesar de que SAT es NP-completo (y probablemente no tiene solución polinomial
 
 #### 1. Propagación de Unidad (Unit Propagation)
 
+##### Notación: Asignación Parcial
+
+Antes de explicar las técnicas, definimos la notación que usaremos:
+
+**Asignación parcial $\alpha$:** Una función parcial que asigna valores de verdad a **algunas** variables.
+
+$$\alpha: \text{Variables} \rightharpoonup \{\text{T}, \text{F}\}$$
+
+**Características:**
+- $\alpha(v) = \text{T}$ significa "la variable $v$ está asignada a verdadero"
+- $\alpha(v) = \text{F}$ significa "la variable $v$ está asignada a falso"
+- $\alpha(v)$ está indefinida significa "la variable $v$ aún no está asignada"
+
+**Notación:**
+- $\alpha = \{P \mapsto T, Q \mapsto F\}$ — asignación parcial donde $P=T$, $Q=F$, otras variables sin asignar
+- $\alpha \cup \{v \mapsto T\}$ — extender $\alpha$ asignando $v=T$
+- $\text{dom}(\alpha)$ — conjunto de variables asignadas en $\alpha$
+
+**Ejemplo:**
+- $\alpha = \{P \mapsto T, R \mapsto F\}$
+- Variables asignadas: $\text{dom}(\alpha) = \{P, R\}$
+- Variables sin asignar: $Q, S, T, ...$ (cualquier otra variable en la fórmula)
+
+---
+
 ##### Definición: Cláusula Unitaria
 
-Una **cláusula unitaria** es una cláusula que contiene **exactamente un literal sin asignar** (todos los demás literales ya son falsos o no existen).
+Una **cláusula unitaria** es una cláusula que, bajo una asignación parcial $\alpha$, tiene **exactamente un literal sin asignar** y **todos los demás literales (si los hay) son falsos**.
 
 **Formalmente:** Una cláusula $C$ es unitaria bajo una asignación parcial $\alpha$ si:
 - $|C| \geq 1$ (tiene al menos un literal)
-- Existe exactamente un literal $l \in C$ tal que $l$ no está asignado en $\alpha$
-- Todos los demás literales en $C$ (si existen) son falsos bajo $\alpha$
+- Existe exactamente un literal $l \in C$ tal que la variable de $l$ no está en $\text{dom}(\alpha)$ (literal sin asignar)
+- Para todo otro literal $l' \in C$ donde $l' \neq l$: el literal $l'$ evalúa a **falso** bajo $\alpha$
 
-**Ejemplos de cláusulas unitarias:**
-- $(P)$ — cláusula con un solo literal (trivialmente unitaria)
-- $(\neg P \lor Q)$ donde $P = T$ → solo queda $Q$ sin asignar → unitaria
-- $(A \lor B \lor C)$ donde $A = F, B = F$ → solo queda $C$ sin asignar → unitaria
+**Dos casos importantes:**
+
+**Caso 1: Cláusula con un solo literal**
+- Ejemplo: $(P)$
+- Si $P$ no está asignada → es **trivialmente unitaria** (no hay "otros literales" que evaluar)
+
+**Caso 2: Cláusula con múltiples literales**
+- Ejemplo: $(\neg P \lor Q \lor R)$ con $\alpha = \{P \mapsto T, R \mapsto F\}$
+- $\neg P$ evalúa a $F$ (porque $P = T$)
+- $R$ evalúa a $F$ (porque $R = F$)
+- $Q$ no está asignada (única sin asignar)
+- Por lo tanto, es **unitaria** con literal $Q$
+
+**Ejemplos detallados:**
+
+1. **$(P)$ con $\alpha = \{\}$ (vacía)**
+   - $P$ no está asignada
+   - No hay otros literales
+   - **Unitaria** ✓ (trivialmente)
+
+2. **$(\neg P \lor Q)$ con $\alpha = \{P \mapsto T\}$**
+   - $\neg P$ evalúa a $F$ (porque $P = T$)
+   - $Q$ no está asignada
+   - Solo $Q$ queda sin asignar, $\neg P$ es falso
+   - **Unitaria** ✓ con literal $Q$
+
+3. **$(A \lor B \lor C)$ con $\alpha = \{A \mapsto F, B \mapsto F\}$**
+   - $A$ evalúa a $F$ (porque $A = F$)
+   - $B$ evalúa a $F$ (porque $B = F$)
+   - $C$ no está asignada
+   - Solo $C$ queda sin asignar, los demás son falsos
+   - **Unitaria** ✓ con literal $C$
+
+**Contraejemplos (NO unitarias):**
+
+1. **$(P \lor Q)$ con $\alpha = \{\}$**
+   - Tanto $P$ como $Q$ sin asignar
+   - **NO unitaria** ✗ (dos literales sin asignar)
+
+2. **$(P \lor Q)$ con $\alpha = \{P \mapsto T\}$**
+   - $P$ evalúa a $T$ (cláusula ya satisfecha)
+   - **NO es unitaria** ✗ (cláusula ya es verdadera, no necesita propagación)
 
 ##### La Regla de Propagación de Unidad
 
