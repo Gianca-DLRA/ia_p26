@@ -405,30 +405,274 @@ A pesar de que SAT es NP-completo (y probablemente no tiene solución polinomial
 
 ### DPLL: El Algoritmo Clásico
 
-**DPLL** (Davis-Putnam-Logemann-Loveland, 1962) mejora la búsqueda exhaustiva con tres ideas:
+**DPLL** (Davis-Putnam-Logemann-Loveland, 1962) es el algoritmo fundamental para SAT. Mejora la búsqueda exhaustiva con tres técnicas de optimización que explotan la estructura de las fórmulas CNF.
+
+---
 
 #### 1. Propagación de Unidad (Unit Propagation)
 
-Si una cláusula tiene **un solo literal sin asignar**, ese literal **debe** ser verdadero para satisfacer la cláusula.
+##### Definición: Cláusula Unitaria
 
-**Ejemplo:**
-- Cláusulas: $(P)$, $(\neg P \lor Q)$, $(R \lor \neg Q)$
-- $(P)$ es **unitaria** → asignamos $P = T$
-- Simplificando: $(\neg P \lor Q)$ se convierte en $(Q)$ → también unitaria → $Q = T$
-- Simplificando: $(R \lor \neg Q)$ se convierte en $(R)$ → $R = T$
+Una **cláusula unitaria** es una cláusula que contiene **exactamente un literal sin asignar** (todos los demás literales ya son falsos o no existen).
 
-Esta propagación en cascada puede resolver muchas variables sin backtracking.
+**Formalmente:** Una cláusula $C$ es unitaria bajo una asignación parcial $\alpha$ si:
+- $|C| \geq 1$ (tiene al menos un literal)
+- Existe exactamente un literal $l \in C$ tal que $l$ no está asignado en $\alpha$
+- Todos los demás literales en $C$ (si existen) son falsos bajo $\alpha$
 
-#### 2. Eliminación de Literales Puros
+**Ejemplos de cláusulas unitarias:**
+- $(P)$ — cláusula con un solo literal (trivialmente unitaria)
+- $(\neg P \lor Q)$ donde $P = T$ → solo queda $Q$ sin asignar → unitaria
+- $(A \lor B \lor C)$ donde $A = F, B = F$ → solo queda $C$ sin asignar → unitaria
 
-Un literal es **puro** si solo aparece en una polaridad (siempre positivo o siempre negativo).
+##### La Regla de Propagación de Unidad
 
-**Ejemplo:** Si $R$ aparece en varias cláusulas pero $\neg R$ nunca aparece, podemos asignar $R = T$ sin afectar negativamente ninguna cláusula.
+**Regla:** Si una cláusula $C$ es unitaria con literal no asignado $l$, entonces **debemos** asignar $l = T$ para satisfacer $C$.
 
-#### 3. Terminación Temprana
+**Justificación:** Es la **única** forma de hacer verdadera esa cláusula. No hay elección — es una inferencia forzada.
 
-- Si todas las cláusulas están satisfechas → **SAT**
-- Si alguna cláusula está vacía (todos sus literales son falsos) → **UNSAT** en esta rama
+**Notación:** $\text{UP}(\phi, \alpha)$ = aplicar propagación de unidad a la fórmula $\phi$ con asignación parcial $\alpha$
+
+##### Algoritmo de Propagación de Unidad
+
+```
+Propagación-Unidad(φ, α):
+    cambió = true
+    mientras cambió:
+        cambió = false
+        para cada cláusula C en φ:
+            si C es unitaria bajo α con literal l:
+                si l es positivo (variable v):
+                    α[v] = T
+                si l es negativo (¬v):
+                    α[v] = F
+                cambió = true
+                Simplificar φ con la nueva asignación
+        
+        si alguna cláusula está vacía:
+            retornar CONFLICTO
+    
+    retornar (φ_simplificada, α_extendida)
+```
+
+##### Ejemplo Detallado Paso a Paso
+
+**Fórmula inicial:**
+$$\phi = (P) \land (\neg P \lor Q) \land (R \lor \neg Q) \land (\neg R \lor S \lor T)$$
+
+**Paso 0: Estado Inicial**
+- Asignación: $\alpha = \{\}$ (vacía)
+- Cláusulas:
+  1. $(P)$ ← **unitaria** (solo un literal, no asignado)
+  2. $(\neg P \lor Q)$
+  3. $(R \lor \neg Q)$
+  4. $(\neg R \lor S \lor T)$
+
+**Paso 1: Propagar $(P)$**
+- **Acción:** Asignar $P = T$ (única opción para satisfacer la cláusula 1)
+- **Asignación:** $\alpha = \{P \mapsto T\}$
+- **Simplificación:**
+  - Cláusula 1: $(P)$ → **TRUE** (eliminar, ya está satisfecha)
+  - Cláusula 2: $(\neg P \lor Q)$ → $(F \lor Q)$ → $(Q)$ ← **nueva unitaria**
+  - Cláusula 3: sin cambios
+  - Cláusula 4: sin cambios
+- **Fórmula resultante:**
+  $$\phi_1 = (Q) \land (R \lor \neg Q) \land (\neg R \lor S \lor T)$$
+
+**Paso 2: Propagar $(Q)$**
+- **Acción:** Asignar $Q = T$ (única opción para la nueva unitaria)
+- **Asignación:** $\alpha = \{P \mapsto T, Q \mapsto T\}$
+- **Simplificación:**
+  - Cláusula 1: $(Q)$ → **TRUE** (eliminar)
+  - Cláusula 2: $(R \lor \neg Q)$ → $(R \lor F)$ → $(R)$ ← **nueva unitaria**
+  - Cláusula 3: sin cambios
+- **Fórmula resultante:**
+  $$\phi_2 = (R) \land (\neg R \lor S \lor T)$$
+
+**Paso 3: Propagar $(R)$**
+- **Acción:** Asignar $R = T$
+- **Asignación:** $\alpha = \{P \mapsto T, Q \mapsto T, R \mapsto T\}$
+- **Simplificación:**
+  - Cláusula 1: $(R)$ → **TRUE** (eliminar)
+  - Cláusula 2: $(\neg R \lor S \lor T)$ → $(F \lor S \lor T)$ → $(S \lor T)$
+- **Fórmula resultante:**
+  $$\phi_3 = (S \lor T)$$
+
+**Paso 4: No más unitarias**
+- La cláusula $(S \lor T)$ tiene dos literales sin asignar
+- **Propagación de unidad termina**
+- Ahora DPLL debe elegir: asignar $S$ o $T$ (backtracking search)
+
+**Resumen:** La propagación en cascada asignó **automáticamente** 3 variables ($P, Q, R$) sin backtracking, reduciendo el espacio de búsqueda de $2^5 = 32$ a $2^2 = 4$ posibilidades.
+
+---
+
+#### 2. Eliminación de Literales Puros (Pure Literal Elimination)
+
+##### Definición: Literal Puro
+
+Un **literal puro** es un literal que aparece en la fórmula **siempre con la misma polaridad**.
+
+**Formalmente:** Para una variable $v$ en la fórmula $\phi$:
+- $v$ es **puro positivo** si $v$ aparece en alguna cláusula pero $\neg v$ **nunca** aparece
+- $v$ es **puro negativo** si $\neg v$ aparece en alguna cláusula pero $v$ **nunca** aparece
+
+**Notación:**
+- $\text{Lit}(\phi)$ = conjunto de todos los literales que aparecen en $\phi$
+- $v$ es puro en $\phi$ si $(v \in \text{Lit}(\phi) \land \neg v \notin \text{Lit}(\phi))$ o $(\neg v \in \text{Lit}(\phi) \land v \notin \text{Lit}(\phi))$
+
+##### La Regla de Eliminación de Literales Puros
+
+**Regla:** Si un literal $l$ es puro en $\phi$, podemos **asignar $l = T$** sin riesgo de hacer falsa ninguna cláusula.
+
+**Justificación:**
+- Si asignamos el literal puro a TRUE, todas las cláusulas que lo contienen se satisfacen
+- Como su negación no aparece en ninguna cláusula, no estamos forzando ninguna cláusula a ser falsa
+- Es una asignación "segura" — nunca causa conflictos
+
+**Algoritmo:**
+```
+Eliminar-Literales-Puros(φ, α):
+    Lit_aparecen = {todos los literales en φ}
+    
+    para cada variable v en φ:
+        si (v ∈ Lit_aparecen y ¬v ∉ Lit_aparecen):
+            // v es puro positivo
+            α[v] = T
+            Eliminar todas las cláusulas que contienen v
+        
+        si (¬v ∈ Lit_aparecen y v ∉ Lit_aparecen):
+            // v es puro negativo
+            α[v] = F
+            Eliminar todas las cláusulas que contienen ¬v
+    
+    retornar (φ_simplificada, α_extendida)
+```
+
+##### Ejemplo Detallado
+
+**Fórmula:**
+$$\phi = (P \lor Q) \land (\neg P \lor R) \land (R \lor S) \land (Q \lor \neg S \lor T)$$
+
+**Análisis de literales:**
+
+| Variable | Aparece positivo | Aparece negativo | Clasificación |
+|----------|:----------------:|:----------------:|---------------|
+| $P$ | ✓ (cláusula 1) | ✓ (cláusula 2) | No puro |
+| $Q$ | ✓ (cláusulas 1, 4) | ✗ | **Puro positivo** |
+| $R$ | ✓ (cláusulas 2, 3) | ✗ | **Puro positivo** |
+| $S$ | ✓ (cláusula 3) | ✓ (cláusula 4) | No puro |
+| $T$ | ✓ (cláusula 4) | ✗ | **Puro positivo** |
+
+**Literales puros identificados:** $Q, R, T$ (todos puros positivos)
+
+**Aplicando la regla:**
+
+**Paso 1: Asignar $Q = T$**
+- Cláusulas afectadas: 1 y 4 → **satisfechas** (eliminar)
+- Fórmula: $\phi_1 = (\neg P \lor R) \land (R \lor S)$
+
+**Paso 2: Asignar $R = T$**
+- Cláusulas afectadas: 1 y 2 (ambas en $\phi_1$) → **satisfechas** (eliminar)
+- Fórmula: $\phi_2 = \emptyset$ (todas las cláusulas eliminadas)
+
+**Paso 3: $T$ ya no aparece** (las cláusulas que lo contenían fueron eliminadas)
+
+**Resultado:** $\phi$ es **satisfacible** con asignación $\alpha = \{Q \mapsto T, R \mapsto T\}$ (P, S, T pueden tener cualquier valor)
+
+**Observación:** ¡Resolvimos el problema sin backtracking! La eliminación de literales puros fue suficiente.
+
+---
+
+#### 3. Terminación Temprana y Detección de Conflictos
+
+##### Condiciones de Terminación
+
+**DPLL puede terminar en tres situaciones:**
+
+**1. Éxito (SAT):** Todas las cláusulas están satisfechas
+- **Condición formal:** $\phi = \emptyset$ (fórmula vacía, todas las cláusulas fueron eliminadas)
+- **Significado:** La asignación actual satisface la fórmula original
+- **Retornar:** SAT con la asignación $\alpha$
+
+**2. Conflicto (UNSAT en esta rama):** Alguna cláusula está vacía
+- **Condición formal:** $\exists C \in \phi : C = \emptyset$ (existe una cláusula sin literales)
+- **Significado:** Todos los literales de esa cláusula son falsos → cláusula insatisfecha
+- **Acción:** Backtracking (deshacer última decisión y probar la opción contraria)
+
+**3. Ninguna simplificación posible:** No hay unitarias ni puros
+- **Condición:** $\phi \neq \emptyset$ y no hay cláusulas unitarias ni literales puros
+- **Acción:** **Branching** (elegir una variable y probar ambos valores)
+
+##### Ejemplo de Conflicto
+
+**Fórmula:**
+$$\phi = (P) \land (\neg P)$$
+
+**Análisis:**
+- Cláusula 1: $(P)$ es unitaria → asignar $P = T$
+- Simplificación: $(P)$ → TRUE (eliminar)
+- Simplificación: $(\neg P)$ → $(F)$ → **cláusula vacía** □
+
+**Conclusión:** **CONFLICTO** — Esta rama del árbol de búsqueda es UNSAT.
+
+**En backtracking:** Si esta fue nuestra primera opción, intentamos $P = F$; si ambas fallan, la fórmula original es UNSAT.
+
+---
+
+#### 4. El Algoritmo DPLL Completo
+
+```
+DPLL(φ, α):
+    // Paso 1: Aplicar simplificaciones mientras sea posible
+    repetir:
+        (φ, α) = Propagación-Unidad(φ, α)
+        si φ contiene cláusula vacía:
+            retornar UNSAT
+        
+        (φ, α) = Eliminar-Literales-Puros(φ, α)
+    hasta que no haya cambios
+    
+    // Paso 2: Verificar terminación
+    si φ == ∅:  // Todas las cláusulas satisfechas
+        retornar (SAT, α)
+    
+    // Paso 3: Branching (elección de variable)
+    Elegir variable no asignada v de φ
+    
+    // Probar v = T
+    si DPLL(φ[v←T], α ∪ {v→T}) == SAT:
+        retornar SAT
+    
+    // Si falló, probar v = F
+    si DPLL(φ[v←F], α ∪ {v→F}) == SAT:
+        retornar SAT
+    
+    // Ambas opciones fallaron
+    retornar UNSAT
+```
+
+**Notación:**
+- $\phi[v \leftarrow T]$ significa "simplificar $\phi$ asumiendo $v = T$"
+- Esto implica eliminar cláusulas con $v$ y quitar $\neg v$ de las cláusulas
+
+---
+
+#### Análisis de Complejidad de DPLL
+
+**Peor caso:**
+- **Tiempo:** $O(2^n)$ donde $n$ = número de variables
+- En el peor caso, debemos probar todas las $2^n$ asignaciones posibles
+
+**Caso promedio (en práctica):**
+- Las optimizaciones (UP y PLE) **podan enormemente** el árbol de búsqueda
+- Muchos problemas reales se resuelven en tiempo razonable
+- El orden de las $2^n$ posibilidades raramente se explora completamente
+
+**Mejoras modernas (CDCL - Conflict-Driven Clause Learning):**
+- Aprende de conflictos para evitar repetir errores
+- Usado en solucionadores modernos (MiniSat, Z3, etc.)
+- Puede resolver instancias con millones de variables
 
 ### Pseudocódigo DPLL
 
