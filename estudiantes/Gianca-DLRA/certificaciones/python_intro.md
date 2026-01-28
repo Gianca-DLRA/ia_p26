@@ -32,4 +32,4 @@ Por favor, inserta aquí abajo una captura de pantalla clara donde se vea:
 ```
 
 o enlace al certificado público:
-[Pegar Link Aquí]()
+[Link Aquí](https://www.datacamp.com/completed/statement-of-accomplishment/course/6af5558301778cbf2a265c14b58e8f7a578f7b26)
